@@ -15,6 +15,7 @@ from src.moderation import (
     send_moderation_flagged_message,
     send_moderation_blocked_message,
 )
+import json
 
 MY_BOT_NAME = BOT_NAME
 MY_BOT_EXAMPLE_CONVOS = EXAMPLE_CONVOS
@@ -42,24 +43,24 @@ async def generate_completion_response(
     try:
         prompt = Prompt(
             header=Message(
-                "System", f"Instructions for {MY_BOT_NAME}: {BOT_INSTRUCTIONS}"
+                "system", f"Instructions for {MY_BOT_NAME}: {BOT_INSTRUCTIONS}"
             ),
             examples=MY_BOT_EXAMPLE_CONVOS,
-            convo=Conversation(messages + [Message(MY_BOT_NAME)]),
+            convo=Conversation(messages),
         )
         rendered = prompt.render()
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=rendered,
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=rendered,
             temperature=1.0,
             top_p=0.9,
-            max_tokens=512,
-            stop=["<|endoftext|>"],
+            max_tokens=2048,
         )
-        reply = response.choices[0].text.strip()
+        reply = response.choices[0].message.content.strip()
         if reply:
             flagged_str, blocked_str = moderate_message(
-                message=(rendered + reply)[-500:], user=user
+                message=(json.dumps(prompt.render()) + reply)[-500:],
+                user=user,
             )
             if len(blocked_str) > 0:
                 return CompletionData(
