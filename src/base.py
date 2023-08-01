@@ -10,10 +10,13 @@ class Message:
     text: Optional[str] = None
 
     def render(self):
-        result = self.user + ":"
-        if self.text is not None:
-            result += " " + self.text
-        return result
+        if self.user == "assistant":
+            return {"role": "assistant", "content": self.text}
+
+        if self.user == "system":
+            return {"role": "system", "content": self.text}
+
+        return {"role": "user", "content": self.text, "name": self.user}
 
 
 @dataclass
@@ -25,9 +28,7 @@ class Conversation:
         return self
 
     def render(self):
-        return f"\n{SEPARATOR_TOKEN}".join(
-            [message.render() for message in self.messages]
-        )
+        return [message.render() for message in self.messages]
 
 
 @dataclass(frozen=True)
@@ -44,10 +45,12 @@ class Prompt:
     convo: Conversation
 
     def render(self):
-        return f"\n{SEPARATOR_TOKEN}".join(
-            [self.header.render()]
-            + [Message("System", "Example conversations:").render()]
-            + [conversation.render() for conversation in self.examples]
-            + [Message("System", "Current conversation:").render()]
-            + [self.convo.render()],
-        )
+        # https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/chatgpt?pivots=programming-language-chat-completions#few-shot-learning-with-chat-completion
+        return [
+            self.header.render(),
+            # For each conversation in our list of examples,
+            # loop through each message in the conversation and
+            # add the message dicts to the list we're going to return
+            *[msg for conversation in self.examples for msg in conversation.render()],
+            *self.convo.render(),
+        ]
