@@ -2,8 +2,6 @@
 
 Discord bot written in Python that uses the [chat completions API](https://platform.openai.com/docs/api-reference/chat) to have conversations with the `gpt-4` model, and the [moderations API](https://beta.openai.com/docs/api-reference/moderations) to filter the messages.
 
-**THIS IS NOT CHATGPT.**
-
 This bot uses the [OpenAI Python Library](https://github.com/openai/openai-python) and [discord.py](https://discordpy.readthedocs.io/).
 
 
